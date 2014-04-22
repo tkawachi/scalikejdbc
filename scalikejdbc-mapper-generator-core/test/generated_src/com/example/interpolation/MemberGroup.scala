@@ -8,9 +8,9 @@ case class MemberGroup(
   name: String, 
   underscore: Option[String] = None) {
 
-  def save()(implicit session: DBSession = MemberGroup.autoSession): MemberGroup = MemberGroup.update(this)(session)
+  def save()(implicit session: DBSession = MemberGroup.autoSession): MemberGroup = MemberGroup.save(this)(session)
 
-  def destroy()(implicit session: DBSession = MemberGroup.autoSession): Unit = MemberGroup.delete(this)(session)
+  def destroy()(implicit session: DBSession = MemberGroup.autoSession): Unit = MemberGroup.destroy(this)(session)
 
 }
       
@@ -26,13 +26,15 @@ object MemberGroup extends SQLSyntaxSupport[MemberGroup] {
     name = rs.string(mg.name),
     underscore = rs.stringOpt(mg.underscore)
   )
+
+  def apply(mg: MemberGroup)(rs: WrappedResultSet): MemberGroup = apply(mg.resultName)(rs)
       
   val mg = MemberGroup.syntax("mg")
 
-  val autoSession = AutoSession
+  override val autoSession = AutoSession
 
   def find(id: Int)(implicit session: DBSession = autoSession): Option[MemberGroup] = {
-    sql"""select ${mg.result.*} from ${MemberGroup as mg} where ID = ${id}"""
+    sql"""select ${mg.result.*} from ${MemberGroup as mg} where ID = \${mg.id}"""
       .map(MemberGroup(mg.resultName)).single.apply()
   }
           
@@ -73,22 +75,22 @@ object MemberGroup extends SQLSyntaxSupport[MemberGroup] {
       underscore = underscore)
   }
 
-  def update(m: MemberGroup)(implicit session: DBSession = autoSession): MemberGroup = {
+  def save(entity: MemberGroup)(implicit session: DBSession = autoSession): MemberGroup = {
     sql"""
       update
         ${MemberGroup.table}
       set
-        ${column.id} = ${m.id},
-        ${column.name} = ${m.name},
-        ${column.underscore} = ${m.underscore}
+        ${column.id} = ${entity.id},
+        ${column.name} = ${entity.name},
+        ${column.underscore} = ${entity.underscore}
       where
-        ${column.id} = ${m.id}
+        ${column.id} = ${entity.id}
       """.update.apply()
-    m
+    entity 
   }
         
-  def delete(m: MemberGroup)(implicit session: DBSession = autoSession): Unit = {
-    sql"""delete from ${MemberGroup.table} where ${column.id} = ${m.id}""".update.apply()
+  def destroy(entity: MemberGroup)(implicit session: DBSession = autoSession): Unit = {
+    sql"""delete from ${MemberGroup.table} where \${column.id} = \${entity.id}""".update.apply()
   }
         
 }

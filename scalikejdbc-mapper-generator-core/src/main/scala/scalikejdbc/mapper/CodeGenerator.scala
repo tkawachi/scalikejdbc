@@ -366,6 +366,8 @@ class CodeGenerator(table: Table, specifiedClassName: Option[String] = None)(imp
       """  def apply(%syntaxName%: ResultName[%className%])(rs: WrappedResultSet): %className% = new %className%(
         |%mapper%
         |  )
+        |
+        |  def apply(%syntaxName%: %className%)(rs: WrappedResultSet): %className% = apply(%syntaxName%.resultName)(rs)
       """.stripMargin.replace("%className%", className)
         .replace("%syntaxName%", syntaxName)
         .replace("%mapper%", _interpolationMapper)
