@@ -251,7 +251,10 @@ abstract class SQL[A, E <: WithExtractor](
    * @return SQL for batch
    */
   def batchByName(parameters: Seq[(Symbol, Any)]*): SQLBatch = {
-    val _sql = validateAndConvertToNormalStatement(statement, parameters.head)._1
+    val _sql = parameters.headOption
+      .map(firstParam => validateAndConvertToNormalStatement(statement, firstParam)._1)
+      .getOrElse(SQLTemplateParser.convertToSQLWithPlaceHolders(statement))
+
     val _parameters: Seq[Seq[Any]] = parameters.map { p =>
       validateAndConvertToNormalStatement(statement, p)._2
     }
